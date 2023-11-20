@@ -64,7 +64,9 @@ read_mgt_plus <- function(project_path) {
 #'
 read_mgt_2012 <- function(project_path) {
   mgt_list <- list.files(path = project_path, pattern = "[:0-9:].mgt")
-  mgt_files <- map(project_path%//%mgt_list,  ~ read_lines(.x, lazy = FALSE)) %>%
-    set_names(str_remove(mgt_list, ".mgt"))
+  
+  # mgt_files <- map(project_path%//%mgt_list,  ~ read_lines(.x, lazy = FALSE)) %>%
+  mgt_files <- map(project_path%//%mgt_list,  ~connFiles(.x)) %>%
+               set_names(str_remove(mgt_list, ".mgt"))
   return(mgt_files)
 }

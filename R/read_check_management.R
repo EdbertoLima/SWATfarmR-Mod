@@ -205,8 +205,9 @@ read_lookup_2012 <- function(project_path) {
     .[,1:2] %>%
     set_names(c("value", "label"))
 
-  lookup$tillage <- read_table(file = project_path%//%"till.dat",
-                               col_names = FALSE, col_types = cols()) %>%
+  lookup$tillage <- read_fwf(file = project_path%//%"till.dat", #col_names = FALSE,
+                             col_types = cols(), # Here, you can specify column types if known
+                             fwf_widths(c(4, 12, 16,16,16))) %>%
     .[,1:2] %>%
     set_names(c("value", "label"))
 

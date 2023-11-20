@@ -98,16 +98,17 @@ read_weather_2012 <- function(project_path) {
 
   weather_file <- list.files(project_path)
   weather_file <- weather_file[tolower(weather_file) %in% c("pcp1.pcp", "tmp1.tmp")]
+  
   pcp_names <- get_station_names(project_path%//%weather_file[1])
   tmp_names <- get_station_names(project_path%//%weather_file[2])
 
   pcp <- read_weather_file(file = project_path%//%weather_file[1],
-                      var = "pcp", skip = 4, digit_var = 5,  digit_date = c(4,3)) %>%
-    set_names(c('date', pcp_names))
+                          var = "pcp", skip = 4, digit_var = 5,  digit_date = c(4,3)) %>%
+                          set_names(c('date', pcp_names))
 
   tmp <- read_weather_file(file = project_path%//%weather_file[2],
-                      var = c("tmax", "tmin"), skip = 4, digit_var = 5,
-                      digit_date = c(4,3))
+                           var = c("tmax", "tmin"), skip = 4, digit_var = 5,
+                           digit_date = c(4,3))
 
   tmin <- select(tmp, date, starts_with("tmin_")) %>%
     set_names(c('date', tmp_names))
@@ -255,7 +256,8 @@ read_con_file <- function(con_path) {
 #'
 connect_weather_2012 <- function(project_path, hru_attributes, variables) {
   sub_list <- list.files(path = project_path, pattern = "[:0-9:].sub")
-  sub_files <- map(project_path%//%sub_list, ~read_lines(.x, lazy = FALSE))
+  # sub_files <- map(project_path%//%sub_list, ~read_lines(.x, lazy = FALSE))
+  sub_files <- map(project_path%//%sub_list, ~readLines(.x))
 
   var_tbl <- sub_files %>%
     map_df(., ~ tibble(pcp  = get_value(.x[7]),
@@ -267,7 +269,7 @@ connect_weather_2012 <- function(project_path, hru_attributes, variables) {
 #                       wnd = get_value(.x[11])
            )) %>%
     mutate(sub = str_remove(sub_list, "0000.sub") %>% as.numeric()) %>%
-    full_join(., hru_attributes, by = 'sub') %>%
+    full_join(., hru_attributes, by = 'sub',multiple = "all") %>%
     select(sub, hru, pcp, tmin, tmax, tav)
 
   var_names <- map(variables, ~select(.x, -date) %>% names(.))

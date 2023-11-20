@@ -238,26 +238,40 @@ is_one_of <- function(x, of_what) {
 read_attributes_2012 <- function(project_path, t0) {
 
   file_list <- list.files(path = project_path, pattern = "[:0-9:].mgt") %>%
-    str_remove(., ".mgt")
+				str_remove(., ".mgt")
 
   if(length(file_list) == 0) {
     stop("No input files found. Please check the path to the SWAT2012 project.")
   }
 
-  hru_files <- map(project_path%//%file_list%.%"hru", read_lines)
-  sol_files <- map(project_path%//%file_list%.%"sol", read_lines)
+  # hru_files <- map(project_path%//%file_list%.%"hru", read_lines)
+  # sol_files <- map(project_path%//%file_list%.%"sol", read_lines)
+  
+  hru_files <- map(project_path%//%file_list%.%"hru", ~connFiles(.x,10))
+  sol_files <- map(project_path%//%file_list%.%"sol", ~connFiles(.x,10))
+
   attr_list <- list()
   n_hru <- length(file_list)
   cat("Initializing farmR:\n")
   for (i in 1:n_hru) {
     attr_list[[i]] <-
       bind_cols(extract_hru_2012(hru_files[[i]]), extract_sol_2012(sol_files[[i]]))
-    display_progress_pct(i, n_hru, t0, "Progress:")
+      display_progress_pct(i, n_hru, t0, "Progress:")
   }
   attr_tbl <- map_df(attr_list, ~.x) %>%
     add_column(., file = file_list, .before = 1)
   return(attr_tbl)
 }
+
+#### Connect to SWAT files
+
+connFiles <- function(path, maxline = -1L){
+  connSource <- file(description = path ,open = "r+",blocking = TRUE)
+  readlinesObj <- readLines(con = connSource,n = maxline)
+  close(connSource)
+  return(readlinesObj)
+}
+
 
 #' Extract HRU attributes from the SWAT2012 .hru files
 #'
@@ -270,6 +284,7 @@ read_attributes_2012 <- function(project_path, t0) {
 #'
 #' @keywords internal
 #'
+
 extract_hru_2012 <- function(str_lines) {
   hru_attr <- str_split(str_lines[1], "\\ |\\:|\\: ") %>%
     unlist() %>%
@@ -295,6 +310,7 @@ extract_hru_2012 <- function(str_lines) {
 #'
 #' @keywords internal
 #'
+
 extract_sol_2012 <- function(str_lines) {
   tibble(hyd_grp = str_split(str_lines[3], "\\:", simplify = TRUE)[2] %>%
            trimws(.),

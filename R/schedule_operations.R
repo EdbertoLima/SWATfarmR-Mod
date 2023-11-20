@@ -98,7 +98,8 @@ schedule_operation <- function(mgt_schedule, variables, lookup, hru_attribute,
   }
 
   hrus_to_schdl <- assigned_hru %>%
-    filter(lu_mgt %in% unique(mgt_schedule$land_use) & is.na(schedule)) %>%
+   ### filter(lu_mgt %in% unique(mgt_schedule$land_use) & is.na(schedule)) %>% #### 
+    filter(luse %in% unique(mgt_schedule$land_use) & is.na(schedule)) %>%
     .$hru
 
   if(length(hrus_to_schdl) == 0) {
@@ -130,7 +131,7 @@ schedule_operation <- function(mgt_schedule, variables, lookup, hru_attribute,
         }
 
         schedule_i <- list(init_crop = NULL, schedule = NULL)
-
+  ###
         if(nrow(mgt_hru_i) > 0) {
           has_only_init_skip <- all(mgt_hru_i$operation %in% c(init_lbl, 'skip'))
 
@@ -180,7 +181,7 @@ schedule_operation <- function(mgt_schedule, variables, lookup, hru_attribute,
             j_op <- 1
             n_op <- nrow(mgt_hru_i)
 
-            var_tbl <- prepare_variables(variables, var_con, i_hru, version)
+            var_tbl <- prepare_variables(variables, var_con, i_hru, version) ###
             date_j <- var_tbl$date[1]
 
             prev_op <- date_j
@@ -229,13 +230,16 @@ schedule_operation <- function(mgt_schedule, variables, lookup, hru_attribute,
               var_tbl <- compute_hu(var_tbl, mgt_j, lookup, date_j, schedule_i, version, i_hru)
               schedule_i <- schedule_op_j(schedule_i, mgt_j, date_j, init_lbl, version)
               j_op <- ifelse(j_op < n_op, j_op + 1, 1)
-            }
+            } ### end of repeat
 
             schedule_i$schedule <- add_end_year_flag(schedule_i$schedule, lookup)
             schedule_i$schedule <- add_skip_year_flag(schedule_i$schedule, variables[[1]], lookup)
             # schedule_i$schedule$date[schedule_i$schedule$operation == 0] <- NA
           }
         }
+        ###
+        
+        
         if(is.null(schedule_i$schedule) | has_only_fix_date) {
           schedule_name <- attribute_hru_i[[luse_lbl]]
           n_i <- 0
@@ -257,7 +261,7 @@ schedule_operation <- function(mgt_schedule, variables, lookup, hru_attribute,
           rs <- dbSendStatement(conn = mgt_db, statement = sql_n)
           dbClearResult(rs)
 
-          if(!is.null(schedule_i$init_crop) & !schdl_already_assigned) {
+          if(!is.null(schedule_i$init_crop) & !schdl_already_assigned) { #### Write db data and split into initial and sch operation
             dbWriteTable(conn = mgt_db,
                          name = paste0('init::',schedule_name),
                          value = schedule_i$init_crop)
@@ -268,7 +272,7 @@ schedule_operation <- function(mgt_schedule, variables, lookup, hru_attribute,
                          value = schedule_i$schedule)
           }
           dbDisconnect(mgt_db)
-      } else {
+      } else { #### update schedule operations
         assign_i <- assigned_hru_i %>%
           filter(n > 0) %>%
           sample_n(., 1)
@@ -535,7 +539,7 @@ schedule_op_j <- function(schedule_i, mgt_j, date_j, init_lbl, version) {
 document_op_skip <- function(op_skip, attribute_hru_i, mgt_j, prev_op, j_op, version) {
   if (version == '2012') {
     skip_i <- tibble(file         = attribute_hru_i$file,
-                     subbasin     = attribute_hru_i$subbasin,
+                     sub          = attribute_hru_i$sub,
                      hru          = attribute_hru_i$hru,
                      landuse      = attribute_hru_i$luse,
                      op_number    = j_op,
