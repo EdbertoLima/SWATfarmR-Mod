@@ -1,6 +1,26 @@
 library(RSQLite)
 library(rlang)
 
+lapply(c("E:/GitHub/SWATfarmR/R/farmR_utils.R",
+         "E:/GitHub/SWATfarmR/R/demo_handling.R",
+         "E:/GitHub/SWATfarmR/R/general_functions.R",
+         "E:/GitHub/SWATfarmR/R/init_load_farmr.R",
+         "E:/GitHub/SWATfarmR/R/read_check_management.R",
+         "E:/GitHub/SWATfarmR/R/read_hru_attributes.R",
+         "E:/GitHub/SWATfarmR/R/read_mgt.R",
+         "E:/GitHub/SWATfarmR/R/read_variable.R",
+         "E:/GitHub/SWATfarmR/R/schedule_operations.R",
+         "E:/GitHub/SWATfarmR/R/write_operations.R"), source)
+
+remotes::install_github('chrisschuerz/SWATdata')
+remotes::install_github('chrisschuerz/SWATfarmR')
+
+demo_path <- 'E:/GitHub/SWATfarmR/Demo'
+
+
+proj_path <-load_demo(dataset = 'project', 
+                       path = demo_path,
+                       version = '2012')
 
 project_path <- "E:/GitHub/SWATfarmR/Demo/swat2012_rev622_demo"
 project_name <- "demo"
